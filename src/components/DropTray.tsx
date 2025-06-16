@@ -2,6 +2,7 @@
 import React from 'react';
 import { useDrop } from 'react-dnd';
 import { getTranslation } from '../data/translations';
+import DraggableItem from './DraggableItem';
 
 interface DropTrayProps {
   id: string;
@@ -42,7 +43,13 @@ const DropTray: React.FC<DropTrayProps> = ({
       <div className="grid grid-cols-4 gap-3 justify-items-center">
         {items.map((item, index) => (
           <div key={`${item.id}-${index}`} className="animate-fade-in">
-            {/* Item will be rendered here by parent component */}
+            <DraggableItem
+              id={item.id}
+              value={item.value}
+              shape={item.shape}
+              color={item.color}
+              isInTray={item.isInTray}
+            />
           </div>
         ))}
       </div>

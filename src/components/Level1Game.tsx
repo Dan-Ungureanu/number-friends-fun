@@ -104,8 +104,8 @@ const Level1Game: React.FC<Level1GameProps> = ({
       key={`${item.id}-${index}`}
       id={item.id}
       value={item.value}
-      shape={item.shape}
-      color={item.color}
+      shape={item.shape || 'circle'}
+      color={item.color || '#FF6B6B'}
       isInTray={item.isInTray}
     />
   );
@@ -143,9 +143,7 @@ const Level1Game: React.FC<Level1GameProps> = ({
             items={tray1Items}
             onDrop={handleDrop}
             language={language}
-          >
-            {tray1Items.map((item, index) => renderItem(item, index))}
-          </DropTray>
+          />
 
           <DropTray
             id="tray2"
@@ -153,9 +151,7 @@ const Level1Game: React.FC<Level1GameProps> = ({
             items={tray2Items}
             onDrop={handleDrop}
             language={language}
-          >
-            {tray2Items.map((item, index) => renderItem(item, index))}
-          </DropTray>
+          />
         </div>
 
         {/* Validation */}

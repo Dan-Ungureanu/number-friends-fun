@@ -16,6 +16,8 @@ export interface NumberItem {
   y: number;
   isInTray: boolean;
   trayId?: string;
+  shape?: string;
+  color?: string;
 }
 
 export interface GameLevel {
