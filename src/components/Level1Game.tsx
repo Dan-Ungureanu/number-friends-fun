@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import DraggableItem from './DraggableItem';
 import DropTray from './DropTray';
 import { Button } from '@/components/ui/button';
-import { getTranslation } from '../data/translations';
+import { getTranslation, happyAnimals } from '../data/translations';
 import { NumberItem } from '../types/game';
 
 interface Level1GameProps {
@@ -24,6 +23,8 @@ const Level1Game: React.FC<Level1GameProps> = ({
   const [tray1Items, setTray1Items] = useState<NumberItem[]>([]);
   const [tray2Items, setTray2Items] = useState<NumberItem[]>([]);
   const [showValidation, setShowValidation] = useState(false);
+  const [validationMessage, setValidationMessage] = useState('');
+  const [validationType, setValidationType] = useState('info');
 
   const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
   const shapes = ['circle', 'square', 'triangle'];
@@ -33,93 +34,54 @@ const Level1Game: React.FC<Level1GameProps> = ({
   }, []);
 
   const generateNewNumber = () => {
-    const num = Math.floor(Math.random() * 11); // 0-10
-    setCurrentNumber(num);
+    const newNumber = Math.floor(Math.random() * 11); // 0-10
+    const items: NumberItem[] = Array.from({ length: newNumber }, (_, index) => ({
+      id: `item-${index}`,
+      value: newNumber,
+      shape: 'animal',
+      color: 'happy',
+      isInTray: false,
+      animal: happyAnimals[Math.floor(Math.random() * happyAnimals.length)],
+      x: 0,
+      y: 0
+    }));
     
-    // Create items for the number
-    const newItems: NumberItem[] = [];
-    for (let i = 0; i < num; i++) {
-      newItems.push({
-        id: `item-${i}`,
-        value: i + 1,
-        x: 0,
-        y: 0,
-        isInTray: false,
-        shape: shapes[i % shapes.length],
-        color: colors[i % colors.length]
-      });
-    }
-    
-    setItems(newItems);
+    setCurrentNumber(newNumber);
+    setItems(items);
     setTray1Items([]);
     setTray2Items([]);
     setShowValidation(false);
+    setValidationMessage('');
+    setValidationType('info');
   };
 
-  const handleDrop = (item: any, trayId: string) => {
-    console.log('Drop event:', { itemId: item.id, trayId });
+  const handleItemClick = (item: NumberItem) => {
+    // Verificăm dacă elementul este în lista de elemente disponibile
+    const itemIndex = items.findIndex(i => i.id === item.id);
+    if (itemIndex === -1) return;
+
+    // Determinăm în care grupă să punem elementul
+    // Dacă numărul este impar și este ultimul element disponibil, îl punem în grupa 2
+    const isLastItem = items.length === 1;
+    const isOddNumber = currentNumber % 2 === 1;
     
-    // Find the item in any of the three locations
-    let foundItem: NumberItem | undefined;
-    let sourceLocation: 'available' | 'tray1' | 'tray2' | null = null;
+    const targetGroup = (isLastItem && isOddNumber) ? 'tray2' : 'tray1';
     
-    // Check available items
-    foundItem = items.find(i => i.id === item.id);
-    if (foundItem) {
-      sourceLocation = 'available';
+    // Actualizăm starea
+    setItems(prev => prev.filter(i => i.id !== item.id));
+    
+    if (targetGroup === 'tray1') {
+      setTray1Items(prev => [...prev, { ...item, isInTray: true, trayId: 'tray1' }]);
     } else {
-      // Check tray1
-      foundItem = tray1Items.find(i => i.id === item.id);
-      if (foundItem) {
-        sourceLocation = 'tray1';
-      } else {
-        // Check tray2
-        foundItem = tray2Items.find(i => i.id === item.id);
-        if (foundItem) {
-          sourceLocation = 'tray2';
-        }
-      }
+      setTray2Items(prev => [...prev, { ...item, isInTray: true, trayId: 'tray2' }]);
     }
 
-    if (!foundItem || !sourceLocation) {
-      console.log('Item not found anywhere:', item.id);
-      return;
+    // Verificăm dacă toate elementele au fost distribuite
+    if (items.length === 1) {
+      setShowValidation(true);
+      setValidationMessage(getTranslation('single_item_message', language));
+      setValidationType('info');
     }
-
-    console.log('Found item in:', sourceLocation, 'moving to:', trayId);
-
-    // Remove from source location
-    if (sourceLocation === 'available') {
-      setItems(prev => prev.filter(i => i.id !== item.id));
-    } else if (sourceLocation === 'tray1') {
-      setTray1Items(prev => prev.filter(i => i.id !== item.id));
-    } else if (sourceLocation === 'tray2') {
-      setTray2Items(prev => prev.filter(i => i.id !== item.id));
-    }
-
-    // Add to target tray
-    const updatedItem = { 
-      ...foundItem, 
-      isInTray: true, 
-      trayId 
-    };
-    
-    if (trayId === 'tray1') {
-      setTray1Items(prev => [...prev, updatedItem]);
-    } else if (trayId === 'tray2') {
-      setTray2Items(prev => [...prev, updatedItem]);
-    }
-
-    // Check if all items are distributed
-    setTimeout(() => {
-      setItems(currentItems => {
-        console.log('Remaining available items:', currentItems.length);
-        if (currentItems.filter(i => i.id !== item.id).length === 0) {
-          setShowValidation(true);
-        }
-        return currentItems;
-      });
-    }, 100);
   };
 
   const checkAnswer = () => {
@@ -153,6 +115,15 @@ const Level1Game: React.FC<Level1GameProps> = ({
           <p className="text-lg opacity-90">
             {getTranslation('drag_items', language)}
           </p>
+          {currentNumber % 2 === 1 ? (
+            <p className="text-sm mt-2 text-orange-200">
+              {getTranslation('odd_number_message', language)}
+            </p>
+          ) : (
+            <p className="text-sm mt-2 text-green-200">
+              {getTranslation('even_number_message', language)}
+            </p>
+          )}
           
           {/* Pairs Counter */}
           {totalPairs > 0 && (
@@ -184,11 +155,8 @@ const Level1Game: React.FC<Level1GameProps> = ({
               {items.map((item, index) => (
                 <DraggableItem
                   key={`${item.id}-${index}`}
-                  id={item.id}
-                  value={item.value}
-                  shape={item.shape || 'circle'}
-                  color={item.color || '#FF6B6B'}
-                  isInTray={item.isInTray}
+                  item={item}
+                  onDoubleClick={() => handleItemClick(item)}
                 />
               ))}
             </div>
@@ -201,7 +169,7 @@ const Level1Game: React.FC<Level1GameProps> = ({
             id="tray1"
             title="group_1"
             items={tray1Items}
-            onDrop={handleDrop}
+            onItemClick={handleItemClick}
             language={language}
             pairsCount={tray1Pairs}
           />
@@ -210,22 +178,49 @@ const Level1Game: React.FC<Level1GameProps> = ({
             id="tray2"
             title="group_2"
             items={tray2Items}
-            onDrop={handleDrop}
+            onItemClick={handleItemClick}
             language={language}
             pairsCount={tray2Pairs}
+            showSingleItemMessage={currentNumber % 2 === 1 && tray2Items.length === 1}
           />
         </div>
 
         {/* Validation */}
         {showValidation && (
-          <div className="text-center animate-fade-in">
-            <Button
-              onClick={checkAnswer}
-              size="lg"
-              className="bg-green-500 hover:bg-green-600 text-white text-xl px-8 py-4 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200"
-            >
-              ✓ Verifică răspunsul
-            </Button>
+          <div className="text-center animate-fade-in space-y-4">
+            <div className="flex gap-4 justify-center">
+              <Button
+                onClick={() => {
+                  const isEven = currentNumber % 2 === 0;
+                  if (isEven) {
+                    onCorrectAnswer();
+                    setTimeout(generateNewNumber, 2000);
+                  } else {
+                    onWrongAnswer();
+                  }
+                }}
+                size="lg"
+                className="bg-blue-500 hover:bg-blue-600 text-white text-xl px-8 py-4 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200"
+              >
+                Par
+              </Button>
+
+              <Button
+                onClick={() => {
+                  const isEven = currentNumber % 2 === 0;
+                  if (!isEven) {
+                    onCorrectAnswer();
+                    setTimeout(generateNewNumber, 2000);
+                  } else {
+                    onWrongAnswer();
+                  }
+                }}
+                size="lg"
+                className="bg-purple-500 hover:bg-purple-600 text-white text-xl px-8 py-4 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200"
+              >
+                Impar
+              </Button>
+            </div>
           </div>
         )}
       </div>

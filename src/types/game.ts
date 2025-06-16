@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 
 export interface GameState {
   currentLevel: number;
@@ -10,14 +11,15 @@ export interface GameState {
 }
 
 export interface NumberItem {
+  [x: string]: ReactNode;
   id: string;
   value: number;
   x: number;
   y: number;
   isInTray: boolean;
-  trayId?: string;
   shape?: string;
   color?: string;
+  trayId?: string;
 }
 
 export interface GameLevel {
