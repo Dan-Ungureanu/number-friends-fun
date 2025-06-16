@@ -3,10 +3,12 @@ import React, { useState, useEffect } from 'react';
 import GameHeader from './GameHeader';
 import LevelSelector from './LevelSelector';
 import Level1Game from './Level1Game';
+import Level2Game from './Level2Game';
+import Level3Game from './Level3Game';
+import Level4Game from './Level4Game';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { GameState } from '../types/game';
-import { getTranslation } from '../data/translations';
 
 interface GameContainerProps {
   language: string;
@@ -71,6 +73,30 @@ const GameContainer: React.FC<GameContainerProps> = ({
       case 1:
         return (
           <Level1Game
+            language={language}
+            onCorrectAnswer={handleCorrectAnswer}
+            onWrongAnswer={handleWrongAnswer}
+          />
+        );
+      case 2:
+        return (
+          <Level2Game
+            language={language}
+            onCorrectAnswer={handleCorrectAnswer}
+            onWrongAnswer={handleWrongAnswer}
+          />
+        );
+      case 3:
+        return (
+          <Level3Game
+            language={language}
+            onCorrectAnswer={handleCorrectAnswer}
+            onWrongAnswer={handleWrongAnswer}
+          />
+        );
+      case 4:
+        return (
+          <Level4Game
             language={language}
             onCorrectAnswer={handleCorrectAnswer}
             onWrongAnswer={handleWrongAnswer}

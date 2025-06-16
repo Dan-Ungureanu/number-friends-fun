@@ -59,39 +59,38 @@ const Level1Game: React.FC<Level1GameProps> = ({
   const handleDrop = (item: any, trayId: string) => {
     console.log('Drop started:', { itemId: item.id, trayId });
     
-    // Find the item in any of the current locations
-    let itemToMove: NumberItem | undefined;
-    let sourceLocation = '';
+    // Create a consolidated list of all items with their locations
+    const allItems = [
+      ...items.map(i => ({ ...i, location: 'available' })),
+      ...tray1Items.map(i => ({ ...i, location: 'tray1' })),
+      ...tray2Items.map(i => ({ ...i, location: 'tray2' }))
+    ];
     
-    if (items.find(i => i.id === item.id)) {
-      itemToMove = items.find(i => i.id === item.id);
-      sourceLocation = 'available';
-    } else if (tray1Items.find(i => i.id === item.id)) {
-      itemToMove = tray1Items.find(i => i.id === item.id);
-      sourceLocation = 'tray1';
-    } else if (tray2Items.find(i => i.id === item.id)) {
-      itemToMove = tray2Items.find(i => i.id === item.id);
-      sourceLocation = 'tray2';
-    }
+    const itemToMove = allItems.find(i => i.id === item.id);
     
     if (!itemToMove) {
       console.log('Item not found:', item.id);
       return;
     }
 
-    console.log('Moving item from:', sourceLocation, 'to:', trayId);
+    console.log('Moving item from:', itemToMove.location, 'to:', trayId);
 
     // Remove from current location
-    if (sourceLocation === 'available') {
+    if (itemToMove.location === 'available') {
       setItems(prev => prev.filter(i => i.id !== item.id));
-    } else if (sourceLocation === 'tray1') {
+    } else if (itemToMove.location === 'tray1') {
       setTray1Items(prev => prev.filter(i => i.id !== item.id));
-    } else if (sourceLocation === 'tray2') {
+    } else if (itemToMove.location === 'tray2') {
       setTray2Items(prev => prev.filter(i => i.id !== item.id));
     }
 
     // Add to new tray
-    const updatedItem = { ...itemToMove, isInTray: true, trayId };
+    const updatedItem = { 
+      ...itemToMove, 
+      isInTray: true, 
+      trayId,
+      location: undefined 
+    };
     
     if (trayId === 'tray1') {
       setTray1Items(prev => [...prev, updatedItem]);
@@ -99,14 +98,13 @@ const Level1Game: React.FC<Level1GameProps> = ({
       setTray2Items(prev => [...prev, updatedItem]);
     }
 
-    // Check if all items are distributed after state updates
+    // Check validation after a short delay
     setTimeout(() => {
       setItems(currentItems => {
-        const remainingItems = currentItems.filter(i => i.id !== item.id);
-        if (remainingItems.length === 0) {
+        if (currentItems.length === 0) {
           setShowValidation(true);
         }
-        return remainingItems;
+        return currentItems;
       });
     }, 100);
   };
@@ -130,17 +128,6 @@ const Level1Game: React.FC<Level1GameProps> = ({
   const tray1Pairs = Math.floor(tray1Items.length / 2);
   const tray2Pairs = Math.floor(tray2Items.length / 2);
   const totalPairs = tray1Pairs + tray2Pairs;
-
-  const renderItem = (item: NumberItem, index: number) => (
-    <DraggableItem
-      key={`${item.id}-${index}`}
-      id={item.id}
-      value={item.value}
-      shape={item.shape || 'circle'}
-      color={item.color || '#FF6B6B'}
-      isInTray={item.isInTray}
-    />
-  );
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -181,7 +168,16 @@ const Level1Game: React.FC<Level1GameProps> = ({
               Elemente disponibile ({items.length})
             </h3>
             <div className="flex flex-wrap gap-4 justify-center">
-              {items.map((item, index) => renderItem(item, index))}
+              {items.map((item, index) => (
+                <DraggableItem
+                  key={`${item.id}-${index}`}
+                  id={item.id}
+                  value={item.value}
+                  shape={item.shape || 'circle'}
+                  color={item.color || '#FF6B6B'}
+                  isInTray={item.isInTray}
+                />
+              ))}
             </div>
           </div>
         )}
