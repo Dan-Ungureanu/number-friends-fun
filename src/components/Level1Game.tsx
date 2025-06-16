@@ -57,30 +57,57 @@ const Level1Game: React.FC<Level1GameProps> = ({
   };
 
   const handleDrop = (item: any, trayId: string) => {
-    const itemToMove = items.find(i => i.id === item.id) || 
-                      tray1Items.find(i => i.id === item.id) || 
-                      tray2Items.find(i => i.id === item.id);
+    console.log('Drop started:', { itemId: item.id, trayId });
     
-    if (!itemToMove) return;
+    // Find the item in any of the current locations
+    let itemToMove: NumberItem | undefined;
+    let sourceLocation = '';
+    
+    if (items.find(i => i.id === item.id)) {
+      itemToMove = items.find(i => i.id === item.id);
+      sourceLocation = 'available';
+    } else if (tray1Items.find(i => i.id === item.id)) {
+      itemToMove = tray1Items.find(i => i.id === item.id);
+      sourceLocation = 'tray1';
+    } else if (tray2Items.find(i => i.id === item.id)) {
+      itemToMove = tray2Items.find(i => i.id === item.id);
+      sourceLocation = 'tray2';
+    }
+    
+    if (!itemToMove) {
+      console.log('Item not found:', item.id);
+      return;
+    }
+
+    console.log('Moving item from:', sourceLocation, 'to:', trayId);
 
     // Remove from current location
-    setItems(prev => prev.filter(i => i.id !== item.id));
-    setTray1Items(prev => prev.filter(i => i.id !== item.id));
-    setTray2Items(prev => prev.filter(i => i.id !== item.id));
+    if (sourceLocation === 'available') {
+      setItems(prev => prev.filter(i => i.id !== item.id));
+    } else if (sourceLocation === 'tray1') {
+      setTray1Items(prev => prev.filter(i => i.id !== item.id));
+    } else if (sourceLocation === 'tray2') {
+      setTray2Items(prev => prev.filter(i => i.id !== item.id));
+    }
 
     // Add to new tray
     const updatedItem = { ...itemToMove, isInTray: true, trayId };
+    
     if (trayId === 'tray1') {
       setTray1Items(prev => [...prev, updatedItem]);
-    } else {
+    } else if (trayId === 'tray2') {
       setTray2Items(prev => [...prev, updatedItem]);
     }
 
-    // Check if all items are distributed
+    // Check if all items are distributed after state updates
     setTimeout(() => {
-      if (items.filter(i => i.id !== item.id).length === 0) {
-        setShowValidation(true);
-      }
+      setItems(currentItems => {
+        const remainingItems = currentItems.filter(i => i.id !== item.id);
+        if (remainingItems.length === 0) {
+          setShowValidation(true);
+        }
+        return remainingItems;
+      });
     }, 100);
   };
 
@@ -98,6 +125,11 @@ const Level1Game: React.FC<Level1GameProps> = ({
       onWrongAnswer();
     }
   };
+
+  // Calculate pairs for each tray
+  const tray1Pairs = Math.floor(tray1Items.length / 2);
+  const tray2Pairs = Math.floor(tray2Items.length / 2);
+  const totalPairs = tray1Pairs + tray2Pairs;
 
   const renderItem = (item: NumberItem, index: number) => (
     <DraggableItem
@@ -121,13 +153,32 @@ const Level1Game: React.FC<Level1GameProps> = ({
           <p className="text-lg opacity-90">
             {getTranslation('drag_items', language)}
           </p>
+          
+          {/* Pairs Counter */}
+          {totalPairs > 0 && (
+            <div className="mt-4 bg-white/20 rounded-lg p-3">
+              <div className="text-lg font-bold">
+                🎯 {totalPairs === 1 ? 'O pereche formată' : `${totalPairs} perechi formate`}
+              </div>
+              {tray1Pairs > 0 && (
+                <div className="text-sm opacity-90">
+                  Grupa 1: {tray1Pairs} {tray1Pairs === 1 ? 'pereche' : 'perechi'}
+                </div>
+              )}
+              {tray2Pairs > 0 && (
+                <div className="text-sm opacity-90">
+                  Grupa 2: {tray2Pairs} {tray2Pairs === 1 ? 'pereche' : 'perechi'}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Available Items */}
         {items.length > 0 && (
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <h3 className="text-xl font-bold text-center mb-4 text-gray-700">
-              Elemente disponibile
+              Elemente disponibile ({items.length})
             </h3>
             <div className="flex flex-wrap gap-4 justify-center">
               {items.map((item, index) => renderItem(item, index))}
@@ -143,6 +194,7 @@ const Level1Game: React.FC<Level1GameProps> = ({
             items={tray1Items}
             onDrop={handleDrop}
             language={language}
+            pairsCount={tray1Pairs}
           />
 
           <DropTray
@@ -151,6 +203,7 @@ const Level1Game: React.FC<Level1GameProps> = ({
             items={tray2Items}
             onDrop={handleDrop}
             language={language}
+            pairsCount={tray2Pairs}
           />
         </div>
 
