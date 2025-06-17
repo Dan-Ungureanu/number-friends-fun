@@ -30,7 +30,7 @@ const Index = () => {
             {getTranslation('game_subtitle', selectedLanguage)}
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Un joc educațional interactiv pentru învățarea numerelor pare și impare prin joc și distracție!
+            {getTranslation('game_description', selectedLanguage)}
           </p>
         </div>
 
@@ -40,20 +40,20 @@ const Index = () => {
             <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center text-4xl mb-2 shadow-lg">
               😊
             </div>
-            <p className="text-sm font-medium text-blue-600">Par</p>
+            <p className="text-sm font-medium text-blue-600">{getTranslation('even', selectedLanguage)}</p>
           </div>
           <div className="text-center animate-bounce" style={{ animationDelay: '0.2s' }}>
             <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center text-4xl mb-2 shadow-lg">
               😄
             </div>
-            <p className="text-sm font-medium text-green-600">Impar</p>
+            <p className="text-sm font-medium text-green-600">{getTranslation('odd', selectedLanguage)}</p>
           </div>
         </div>
 
         {/* Language Selection */}
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-gray-700 mb-4">
-            {getTranslation('choose_language', selectedLanguage)}
+            {getTranslation('select_language', selectedLanguage)}
           </h3>
           <LanguageSelector
             selectedLanguage={selectedLanguage}
@@ -74,18 +74,18 @@ const Index = () => {
         <div className="mt-12 grid md:grid-cols-3 gap-6 text-sm">
           <div className="flex flex-col items-center p-4 bg-blue-50 rounded-xl">
             <div className="text-3xl mb-2">🎯</div>
-            <h4 className="font-semibold text-blue-800 mb-1">4 Niveluri</h4>
-            <p className="text-blue-600 text-center">De la începător la profesionist</p>
+            <h4 className="font-semibold text-blue-800 mb-1">{getTranslation('levels', selectedLanguage)}</h4>
+            <p className="text-blue-600 text-center">{getTranslation('from_beginner_to_professional', selectedLanguage)}</p>
           </div>
           <div className="flex flex-col items-center p-4 bg-green-50 rounded-xl">
             <div className="text-3xl mb-2">🌍</div>
-            <h4 className="font-semibold text-green-800 mb-1">8 Limbi</h4>
-            <p className="text-green-600 text-center">Suport multilingv complet</p>
+            <h4 className="font-semibold text-green-800 mb-1">{getTranslation('languages', selectedLanguage)}</h4>
+            <p className="text-green-600 text-center">{getTranslation('support_multiple_languages', selectedLanguage)}</p>
           </div>
           <div className="flex flex-col items-center p-4 bg-purple-50 rounded-xl">
             <div className="text-3xl mb-2">🎮</div>
-            <h4 className="font-semibold text-purple-800 mb-1">Interactiv</h4>
-            <p className="text-purple-600 text-center">Drag & drop și animații</p>
+            <h4 className="font-semibold text-purple-800 mb-1">{getTranslation('interactive', selectedLanguage)}</h4>
+            <p className="text-purple-600 text-center">{getTranslation('drag_drop', selectedLanguage)}</p>
           </div>
         </div>
       </div>

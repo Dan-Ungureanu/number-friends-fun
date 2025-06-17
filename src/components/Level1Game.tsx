@@ -33,8 +33,18 @@ const Level1Game: React.FC<Level1GameProps> = ({
     generateNewNumber();
   }, []);
 
+  useEffect(() => {
+    const totalItems = items.length + tray1Items.length + tray2Items.length;
+    const initialItems = currentNumber;
+    
+    // Verificăm dacă toate elementele au fost distribuite
+    if (totalItems === initialItems && items.length === 0) {
+      setShowValidation(true);
+    }
+  }, [items, tray1Items, tray2Items, currentNumber]);
+
   const generateNewNumber = () => {
-    const newNumber = Math.floor(Math.random() * 11); // 0-10
+    const newNumber = Math.floor(Math.random() * 10) + 1; // 1-10
     const items: NumberItem[] = Array.from({ length: newNumber }, (_, index) => ({
       id: `item-${index}`,
       value: newNumber,
@@ -55,32 +65,26 @@ const Level1Game: React.FC<Level1GameProps> = ({
     setValidationType('info');
   };
 
-  const handleItemClick = (item: NumberItem) => {
+  const handleItemClick = (item: NumberItem, targetGroup?: 'tray1' | 'tray2') => {
     // Verificăm dacă elementul este în lista de elemente disponibile
     const itemIndex = items.findIndex(i => i.id === item.id);
     if (itemIndex === -1) return;
 
     // Determinăm în care grupă să punem elementul
-    // Dacă numărul este impar și este ultimul element disponibil, îl punem în grupa 2
     const isLastItem = items.length === 1;
     const isOddNumber = currentNumber % 2 === 1;
     
-    const targetGroup = (isLastItem && isOddNumber) ? 'tray2' : 'tray1';
+    // Folosim targetGroup dacă este specificat (pentru drag and drop)
+    // altfel folosim logica pentru dublu click
+    const finalTargetGroup = targetGroup || ((isLastItem && isOddNumber) ? 'tray2' : 'tray1');
     
     // Actualizăm starea
     setItems(prev => prev.filter(i => i.id !== item.id));
     
-    if (targetGroup === 'tray1') {
+    if (finalTargetGroup === 'tray1') {
       setTray1Items(prev => [...prev, { ...item, isInTray: true, trayId: 'tray1' }]);
     } else {
       setTray2Items(prev => [...prev, { ...item, isInTray: true, trayId: 'tray2' }]);
-    }
-
-    // Verificăm dacă toate elementele au fost distribuite
-    if (items.length === 1) {
-      setShowValidation(true);
-      setValidationMessage(getTranslation('single_item_message', language));
-      setValidationType('info');
     }
   };
 
@@ -202,7 +206,7 @@ const Level1Game: React.FC<Level1GameProps> = ({
                 size="lg"
                 className="bg-blue-500 hover:bg-blue-600 text-white text-xl px-8 py-4 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200"
               >
-                Par
+                {getTranslation('even', language)}
               </Button>
 
               <Button
@@ -218,7 +222,7 @@ const Level1Game: React.FC<Level1GameProps> = ({
                 size="lg"
                 className="bg-purple-500 hover:bg-purple-600 text-white text-xl px-8 py-4 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200"
               >
-                Impar
+                {getTranslation('odd', language)}
               </Button>
             </div>
           </div>
